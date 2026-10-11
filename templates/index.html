@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Symptom Predictor</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 40px; display: flex; justify-content: center; }
+        .container { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 480px; }
+        h2 { text-align: center; color: #333; margin-bottom: 25px; font-size: 24px; }
+        .form-group { margin-bottom: 18px; }
+        .label-container { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .symptom-icon { width: 24px; height: 24px; object-fit: contain; }
+        label { font-weight: bold; color: #555; }
+        input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        button { width: 100%; background-color: #28a745; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        button:hover { background-color: #218838; }
+        #result { margin-top: 20px; padding: 15px; border-radius: 8px; text-align: center; display: none; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .result-img { width: 80px; height: 80px; margin-bottom: 10px; object-fit: contain; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Symptom Assessment</h2>
+        <form id="symptomForm">
+            <div class="form-group">
+                <div class="label-container">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2877/2877772.png" class="symptom-icon" alt="Fever Icon">
+                    <label for="Fever">Fever (°F):</label>
+                </div>
+                <input type="number" step="0.1" id="Fever" value="98.6" required>
+            </div>
+
+            <div class="form-group">
+                <div class="label-container">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2877/2877817.png" class="symptom-icon" alt="Headache Icon">
+                    <label for="Headache">Headache Severity (0-10):</label>
+                </div>
+                <input type="number" step="0.1" id="Headache" value="0.0" min="0" max="10" required>
+            </div>
+
+            <div class="form-group">
+                <div class="label-container">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2877/2877810.png" class="symptom-icon" alt="Cough Icon">
+                    <label for="Cough">Cough Severity (0-10):</label>
+                </div>
+                <input type="number" step="0.1" id="Cough" value="0.0" min="0" max="10" required>
+            </div>
+
+            <div class="form-group">
+                <div class="label-container">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2877/2877797.png" class="symptom-icon" alt="Fatigue Icon">
+                    <label for="Fatigue">Fatigue Severity (0-10):</label>
+                </div>
+                <input type="number" step="0.1" id="Fatigue" value="0.0" min="0" max="10" required>
+            </div>
+
+            <div class="form-group">
+                <div class="label-container">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2877/2877823.png" class="symptom-icon" alt="Body Pain Icon">
+                    <label for="Body_Pain">Body Pain Severity (0-10):</label>
+                </div>
+                <input type="number" step="0.1" id="Body_Pain" value="0.0" min="0" max="10" required>
+            </div>
+
+            <button type="submit">Predict Condition</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('symptomForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('result');
+            
+            const payload = {
+                Fever: parseFloat(document.getElementById('Fever').value),
+                Headache: parseFloat(document.getElementById('Headache').value),
+                Cough: parseFloat(document.getElementById('Cough').value),
+                Fatigue: parseFloat(document.getElementById('Fatigue').value),
+                Body_Pain: parseFloat(document.getElementById('Body_Pain').value)
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.style.display = 'block';
+                    
+                    // Dynamic Result Icon
+                    const resultImageUrl = "https://cdn-icons-png.flaticon.com/512/2966/2966327.png";
+                    
+                    resultDiv.innerHTML = `
+                        <img src="${resultImageUrl}" class="result-img" alt="Medical Diagnosis Icon"><br>
+                        <strong>Prediction:</strong> ${data.disease}<br>
+                        <small>Confidence: ${data.confidence}</small>
+                    `;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerText = data.error || 'An error occurred.';
+                }
+            } catch (err) {
+                resultDiv.className = 'error';
+                resultDiv.style.display = 'block';
+                resultDiv.innerText = 'Unable to connect to the server.';
+            }
+        });
+    </script>
+</body>
+</html>
